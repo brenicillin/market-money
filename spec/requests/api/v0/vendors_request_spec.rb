@@ -56,4 +56,39 @@ RSpec.describe 'Markets API' do
       expect(error[:detail]).to eq("Couldn't find Market with 'id'=0.")
     end
   end
+
+  describe 'show happy path' do
+    it 'sends a single vendor' do
+      create(:vendor)
+      
+      get "/api/v0/vendors/#{Vendor.last.id}"
+      
+      expect(response).to be_successful
+      
+      body = JSON.parse(response.body, symbolize_names: true)[:data]
+      attributes = body[:attributes]
+      
+      expect(body).to have_key(:id)
+      expect(body[:id]).to be_an(String)
+      expect(attributes).to have_key(:name)
+      expect(attributes).to have_key(:description)
+      expect(attributes).to have_key(:contact_name)
+      expect(attributes).to have_key(:contact_phone)
+      expect(attributes).to have_key(:credit_accepted)
+    end
+  end
+
+  describe 'show sad path' do
+    it 'returns an error if vendor does not exist' do
+      get "/api/v0/vendors/0"
+
+      expect(response).to_not be_successful
+      expect(response.status).to eq(404)
+
+      body = JSON.parse(response.body, symbolize_names: true)
+      error = body[:errors].first
+
+      expect(error[:detail]).to eq("Couldn't find Vendor with 'id'=0.")
+    end
+  end
 end
