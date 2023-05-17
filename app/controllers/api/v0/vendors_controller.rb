@@ -25,6 +25,15 @@ class Api::V0::VendorsController < ApplicationController
     end
   end
 
+  def update
+    if Vendor.exists?(params[:id])
+      Vendor.update(params[:id], vendor_params)
+      render json: VendorSerializer.new(Vendor.find(params[:id]))
+    else
+      render json: { errors: [{ detail: "Couldn't find Vendor with 'id'=#{params[:id]}."}] }, status: 404
+    end
+  end
+
   def destroy
     if Vendor.exists?(params[:id])
       Vendor.destroy(params[:id])
