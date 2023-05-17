@@ -12,7 +12,7 @@ RSpec.describe 'Markets API' do
     MarketVendor.create(market_id: @market_2.id, vendor_id: vendor_3.id)
     MarketVendor.create(market_id: @market_2.id, vendor_id: vendor_1.id)
   end
-  describe 'happy path' do
+  describe 'index happy path' do
     it 'sends a list of vendors' do
       get "/api/v0/markets/#{@market_1.id}/vendors"
 
@@ -43,7 +43,7 @@ RSpec.describe 'Markets API' do
     end
   end
 
-  describe 'sad path' do
+  describe 'index sad path' do
     it 'returns an error if market does not exist' do
       get "/api/v0/markets/0/vendors"
 
@@ -89,6 +89,87 @@ RSpec.describe 'Markets API' do
       error = body[:errors].first
 
       expect(error[:detail]).to eq("Couldn't find Vendor with 'id'=0.")
+    end
+  end
+
+  describe 'create happy path' do
+    it 'creates a new vendor' do
+      vendor_params = {
+        name: 'Buzzy Bees',
+        description: 'local honey and wax products',
+        contact_name: 'Berly Couwer',
+        contact_phone: '8389928383',
+        credit_accepted: false
+      }
+
+      post '/api/v0/vendors', params: { vendor: vendor_params }
+
+      expect(response).to be_successful
+      expect(response.status).to eq(201)
+
+      body = JSON.parse(response.body, symbolize_names: true)[:data]
+      vendor = body[:attributes]
+
+      expect(body).to have_key(:id)
+      expect(body[:id]).to be_an(String)
+
+      expect(body).to have_key(:type)
+      expect(body[:type]).to eq('vendor')
+
+      expect(vendor).to have_key(:name)
+      expect(vendor[:name]).to eq(vendor_params[:name])
+
+      expect(vendor).to have_key(:description)
+      expect(vendor[:description]).to eq(vendor_params[:description])
+
+      expect(vendor).to have_key(:contact_name)
+      expect(vendor[:contact_name]).to eq(vendor_params[:contact_name])
+
+      expect(vendor).to have_key(:contact_phone)
+      expect(vendor[:contact_phone]).to eq(vendor_params[:contact_phone])
+
+      expect(vendor).to have_key(:credit_accepted)
+      expect(vendor[:credit_accepted]).to eq(vendor_params[:credit_accepted])
+    end
+  end
+
+  describe 'create sad path' do
+    it 'returns an error if name is missing' do
+      vendor_params = {
+        name: '',
+        description: 'local honey and wax products',
+        contact_name: 'Berly Couwer',
+        contact_phone: '8389928383',
+        credit_accepted: false
+      }
+
+      post '/api/v0/vendors', params: { vendor: vendor_params }
+
+      expect(response).to_not be_successful
+      expect(response.status).to eq(400)
+      body = JSON.parse(response.body, symbolize_names: true)
+    end
+  end
+
+  describe 'destroy happy path' do
+    it 'deletes a vendor' do
+      destroy_me = create(:vendor)
+
+      delete "/api/v0/vendors/#{destroy_me.id}"
+
+      expect(response).to be_successful
+      expect(response.status).to eq(204)
+
+      expect(Vendor.where(id: destroy_me.id)).to eq([])
+    end
+  end
+
+  describe 'destroy sad path' do
+    it 'returns an error if vendor does not exist' do
+      delete "/api/v0/vendors/0"
+
+      expect(response).to_not be_successful
+      expect(response.status).to eq(404)
     end
   end
 end
