@@ -172,4 +172,55 @@ RSpec.describe 'Markets API' do
       expect(response.status).to eq(404)
     end
   end
+
+  describe 'update happy path' do
+    it 'updates a vendor' do
+      vendor = create(:vendor)
+      vendor_params = {
+        name: 'Buzzy Bees',
+        description: 'local honey and wax products',
+        contact_name: 'Berly Couwer',
+        contact_phone: '8389928383',
+        credit_accepted: false
+      }
+
+      patch "/api/v0/vendors/#{vendor.id}", params: { vendor: vendor_params }
+
+      expect(response).to be_successful
+      expect(response.status).to eq(200)
+      expect(Vendor.last.name).to eq(vendor_params[:name])
+      expect(Vendor.last.description).to eq(vendor_params[:description])
+      expect(Vendor.last.contact_name).to eq(vendor_params[:contact_name])
+      expect(Vendor.last.contact_phone).to eq(vendor_params[:contact_phone])
+      expect(Vendor.last.credit_accepted).to eq(vendor_params[:credit_accepted])
+    end
+  end
+
+  describe 'update sad path' do
+    it 'returns an error if vendor does not exist' do
+      patch "/api/v0/vendors/0"
+
+      expect(response).to_not be_successful
+      expect(response.status).to eq(404)
+    end
+
+    it 'returns an error if name is missing' do
+      vendor = create(:vendor)
+      vendor_params = {
+        name: '',
+        description: 'local honey and wax products',
+        contact_name: 'Berly Couwer',
+        contact_phone: '8389928383',
+        credit_accepted: false
+      }
+
+      patch "/api/v0/vendors/#{vendor.id}", params: { vendor: vendor_params }
+      body = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response).to_not be_successful
+      expect(response.status).to eq(400)
+      expect(body).to have_key(:errors)
+      expect(body[:errors].first[:detail]).to eq("Validation failed: Missing required field")
+    end
+  end
 end
