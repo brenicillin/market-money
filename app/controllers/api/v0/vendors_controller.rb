@@ -27,8 +27,12 @@ class Api::V0::VendorsController < ApplicationController
 
   def update
     if Vendor.exists?(params[:id])
-      Vendor.update(params[:id], vendor_params)
-      render json: VendorSerializer.new(Vendor.find(params[:id]))
+      vendor = Vendor.find(params[:id])
+      if vendor.update(vendor_params)
+        render json: VendorSerializer.new(vendor), status: 200
+      else
+        render json: { errors: [{detail: "Validation failed: Missing required field"}] }, status: 400
+      end
     else
       render json: { errors: [{ detail: "Couldn't find Vendor with 'id'=#{params[:id]}."}] }, status: 404
     end
@@ -36,7 +40,7 @@ class Api::V0::VendorsController < ApplicationController
 
   def destroy
     if Vendor.exists?(params[:id])
-      Vendor.destroy(params[:id])
+      render json: Vendor.destroy(params[:id]), status: 204
     else
       render json: { errors: [{ detail: "Couldn't find Vendor with 'id'=#{params[:id]}."}] }, status: 404
     end
