@@ -3,6 +3,7 @@ Rails.application.routes.draw do
     namespace :v0 do
       get 'markets/search', to: 'market_search#index'
       resources :markets, only: [:index, :show] do
+        get 'nearest_atms', to: 'atm#index'
         resources :vendors, only: [:index]
       end
       resources :vendors, only: [:show, :create, :destroy, :update]
